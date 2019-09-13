@@ -1,0 +1,107 @@
+<PlusConfiguration version="2.1">
+
+  <DataCollection StartupDelaySec="1.0">
+    <DeviceSet 
+      Name="PlusServer: NDI Aurora tracker And OpenCV RTMP"
+      Description="Fichero de configuracion de practica para TFG"
+    />
+    <Device
+      Id="TrackerDevice" 
+      Type="AuroraTracker"
+      SerialPort="9"
+      ToolReferenceFrame="Tracker"
+      MeasurementVolumeNumber="1"
+      >
+      <DataSources>
+        <DataSource Type="Tool" Id="Needle" PortName="0" />
+	<DataSource Type="Tool" Id="Reference" PortName="1" />
+	<DataSource Type="Tool" Id="Probe" PortName="2" />
+	
+      </DataSources>
+      <OutputChannels>
+        <OutputChannel Id="TrackerStream">
+          <DataSource Id="Needle" />
+	  <DataSource Id="Probe" />
+	  <DataSource Id="Reference" />
+        </OutputChannel>
+      </OutputChannels>
+    </Device>
+
+    
+    <Device
+      Id="CaptureDevice"
+      Type="VirtualCapture"
+      BaseFilename="RecordingTest.mha"
+      EnableCapturingOnStart="FALSE" >
+      <InputChannels>
+        <InputChannel Id="TrackedVideoStream" />
+      </InputChannels>
+    </Device>
+
+	<Device
+      Id="VideoDevice"
+      Type="OpenCVVideo"
+      RequestedCaptureApi="CAP_FFMPEG"
+      VideoURL="rtmp://127.0.0.1/live/1234"
+	>
+      <DataSources>
+        <DataSource 
+		Type="Video" 
+		BufferSize="128"
+		AveragedItemsForFiltering="30"
+		Id="Video" 
+		ImageType="RGB_COLOR" 
+		PortUsImageOrientation="MF" 
+	 />
+      </DataSources>
+      <OutputChannels>
+        <OutputChannel Id="VideoStream" VideoDataSourceId="Video" />
+      </OutputChannels>
+    </Device>
+
+  <Device 
+      Id="TrackedVideoDevice" 
+      Type="VirtualMixer" >
+      <InputChannels>
+        <InputChannel Id="TrackerStream" />
+        <InputChannel Id="VideoStream" />
+      </InputChannels>
+      <OutputChannels>
+        <OutputChannel Id="TrackedVideoStream"/>
+      </OutputChannels>
+    </Device>
+	
+
+  </DataCollection>
+
+  <CoordinateDefinitions>
+    <Transform From="Image" To="Probe"
+      Matrix="0.223369 -0.00773821 0.00151429 -247.19 
+	     -0.0078003 -0.223131 0.0103753 78.503 
+ 	     0.00115253 -0.0104217 -0.223262 14.9462 
+	     0 0 0 1 " />
+  </CoordinateDefinitions>
+
+  <PlusOpenIGTLinkServer 
+    MaxNumberOfIgtlMessagesToSend="1" 
+    MaxTimeSpentWithProcessingMs="50" 
+    ListeningPort="18944" 
+    SendValidTransformsOnly="true" 
+    OutputChannelId="TrackedVideoStream" > 
+    <DefaultClientInfo> 
+      <MessageTypes> 
+        <Message Type="TRANSFORM" />
+	<Message Type="IMAGE" />
+      </MessageTypes>
+      <TransformNames> 
+        <Transform Name="NeedleToReference" />
+        <Transform Name="ProbeToReference" />
+	<Transform Name="ImageToProbe" />
+      </TransformNames>
+ 	<ImageNames>
+        <Image Name="Image" EmbeddedTransformToFrame="Probe" />
+      </ImageNames>
+    </DefaultClientInfo>
+  </PlusOpenIGTLinkServer>
+
+</PlusConfiguration>
